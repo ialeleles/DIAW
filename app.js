@@ -47,6 +47,27 @@ app.post ('/produtos', (req, res) => {
     res.status(201).json(novoProduto);
 });
 
+app.put('/produtos/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const { descricao, valor, marca } = req.body;
+
+    const index = produtos.findIndex(produto => produto.id === id);
+
+    if (index !== -1) {
+       
+        produtos[index] = {
+            id,
+            descricao: descricao || produtos[index].descricao,
+            valor: valor ? Number(valor) : produtos[index].valor,
+            marca: marca || produtos[index].marca
+        };
+
+        res.json(produtos[index]);
+    } else {
+        res.status(404).json({ Erro: 'Produto não encontrado' });
+    }
+});
+
 app.listen(3000, () => {
     console.log('Servidor ouvindo em http://localhost:3000')
 });
