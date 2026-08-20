@@ -1,5 +1,6 @@
 const express = require ('express')
 const app = express()
+app.use(express.json());
 
 const produtos = [
     { id: 1, descricao: "Arroz parboilizado 5Kg", valor: 25.00, marca: "Tio João" },
@@ -23,10 +24,29 @@ app.delete ('/produtos/:id', (req, res) => {
         produtos.splice (index, 1)
         res.json (produtos)
     } else {
-        res.status (404).json({Erro: 'Id não encontrado'});
+        res.status(404).json({Erro: 'Id não encontrado'});
     }
 });
 
-app.listen(3000, (e) => {
+app.post ('/produtos', (req, res) => {
+    const { descricao, valor, marca } = req.body;
+
+    if (!descricao || !valor || !marca) {
+        return res.status(400).json({Erro: 'Todos os campos sáo obrigatórios!'})
+    }
+
+    const novoProduto = {
+        id: produtos.length > 0 ? produtos[produtos.length - 1].id + 1 : 1,
+        descricao,
+        valor: Number(valor),
+        marca
+    };
+
+    produtos.push(novoProduto);
+
+    res.status(201).json(novoProduto);
+});
+
+app.listen(3000, () => {
     console.log('Servidor ouvindo em http://localhost:3000')
 });
