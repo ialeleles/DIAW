@@ -28,29 +28,30 @@ app.delete ('/produtos/:id', (req, res) => {
     }
 });
 
-app.get ('/produtos/;id', (req, res) => {
+app.get ('/produtos/:id', (req, res) => {
     const id = parseInt (req.params.id);
 
 })
 
-app.post ('/produtos', (req, res) => {
-    const { descricao, valor, marca } = req.body;
+app.post('/produtos', (req, res) => {
+    const { descricao, preco, categoria, estoque } = req.body;
 
-    if (!descricao || !valor || !marca) {
-        return res.status(400).json({Erro: 'Todos os campos sáo obrigatórios!'})
+    if (!descricao || !preco || !categoria || !estoque) {
+        return res.status(400).json({ Erro: 'Todos os campos são obrigatórios!' });
     }
 
+    const ultimoId = produtos.length > 0 ? produtos[produtos.length - 1].id : 0;
+    
     const novoProduto = {
-        id: produtos.length > 0 ? produtos[produtos.length - 1].id + 1 : 1,
+        id: ultimoId + 1,
         descricao,
-        preco: Number(preco),
+        preco,
         categoria,
         estoque
     };
 
     produtos.push(novoProduto);
-
-    res.status(201).json(novoProduto);
+    return res.status(201).json(novoProduto);
 });
 
 app.put('/produtos/:id', (req, res) => {
