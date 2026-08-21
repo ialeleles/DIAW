@@ -3,11 +3,11 @@ const app = express()
 app.use(express.json());
 
 const produtos = [
-    { id: 1, descricao: "Arroz parboilizado 5Kg", valor: 25.00, marca: "Tio João" },
-        { id: 2, descricao: "Maionese 250gr", valor: 7.20, marca: "Helmans" },
-        { id: 3, descricao: "Iogurte Natural 200ml", valor: 2.50, marca: "Itambé" },
-        { id: 4, descricao: "Batata Maior Palha 300gr", valor: 15.20, marca: "Chipps" },
-        { id: 5, descricao: "Nescau 400gr", valor: 8.00, marca: "Nestlé" }
+  { "id": 1, "descricao": "Arroz parboilizado 5Kg", "preco": 25.00, "categoria": "Alimentos", "estoque": 10 },
+  { "id": 2, "descricao": "Maionese 250gr", "preco": 7.20, "categoria": "Alimentos", "estoque": 5 },
+  { "id": 3, "descricao": "Iogurte Natural 200ml", "preco": 2.50, "categoria": "Laticínios", "estoque": 0 },
+  { "id": 4, "descricao": "Batata Maior Palha 300gr", "preco": 15.20, "categoria": "Alimentos", "estoque": 2 },
+  { "id": 5, "descricao": "Nescau 400gr", "preco": 8.00, "categoria": "Alimentos", "estoque": 6 }
 ]
 
 app.get ('/produtos', (req, res) => {
@@ -28,6 +28,11 @@ app.delete ('/produtos/:id', (req, res) => {
     }
 });
 
+app.get ('/produtos/;id', (req, res) => {
+    const id = parseInt (req.params.id);
+
+})
+
 app.post ('/produtos', (req, res) => {
     const { descricao, valor, marca } = req.body;
 
@@ -38,8 +43,9 @@ app.post ('/produtos', (req, res) => {
     const novoProduto = {
         id: produtos.length > 0 ? produtos[produtos.length - 1].id + 1 : 1,
         descricao,
-        valor: Number(valor),
-        marca
+        preco: Number(preco),
+        categoria,
+        estoque
     };
 
     produtos.push(novoProduto);
@@ -58,8 +64,9 @@ app.put('/produtos/:id', (req, res) => {
         produtos[index] = {
             id,
             descricao: descricao || produtos[index].descricao,
-            valor: valor ? Number(valor) : produtos[index].valor,
-            marca: marca || produtos[index].marca
+            preco: preco ? Number(preco) : produtos[index].preco,
+            categoria: categoria || categoria[index].categoria,
+            estoque: estoque ? Number(estoque) : estoque[index].estoque
         };
 
         res.json(produtos[index]);
