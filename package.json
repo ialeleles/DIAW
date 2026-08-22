@@ -21,8 +21,5 @@
   "bugs": {
     "url": "https://github.com/ialeleles/DIAW/issues"
   },
-  "homepage": "https://github.com/ialeleles/DIAW#readme",
-  "dependencies": {
-    "express": "^5.2.1"
-  }
+  "homepage": "https://github.com/ialeleles/DIAW#readme"
 }
