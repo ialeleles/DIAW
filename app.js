@@ -10,6 +10,7 @@ const produtos = [
   { "id": 5, "descricao": "Nescau 400gr", "preco": 8.00, "categoria": "Alimentos", "estoque": 6 }
 ];
 
+app.use('/site', express.static('site'));
 
 app.get('/produtos', (req, res) => {
     res.json(produtos);
