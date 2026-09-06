@@ -2,6 +2,14 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
+/*
+req.getheader receber authorization: basic
+processamento: verifica se usuario existe e se senha é igual
+respostas: tela de login (caso de senha errada) ou acesso ao sistema (senha correta)
+COOKIE = protocolo que verifica se o servidor reconheceu o usuário (res.cookie('usuario', 'senha'))
+JWT -> Json Web Token
+*/
+
 const produtos = [
   { "id": 1, "descricao": "Arroz parboilizado 5Kg", "preco": 25.00, "categoria": "Alimentos", "estoque": 10 },
   { "id": 2, "descricao": "Maionese 250gr", "preco": 7.20, "categoria": "Alimentos", "estoque": 5 },
@@ -10,7 +18,24 @@ const produtos = [
   { "id": 5, "descricao": "Nescau 400gr", "preco": 8.00, "categoria": "Alimentos", "estoque": 6 }
 ];
 
+const usuariosCadastrados = [
+    { "id": 1, "usuario": "usuario", "senha": 123},
+    { "id": 2, "usuario": "admin", "senha": 123},
+]
+
 app.use(express.static('public'));
+
+app.post('/login', (req, res) => {
+    const {usuario, senha} = req.body;
+
+    const usuarioEncontrado = usuariosCadastrados.find(u => u.usuario === usuario && String(u.senha) === String(senha));
+
+    if(usuarioEncontrado) {
+        return res.status(200).json({ mensagem: 'Login realizado com sucesso!' });
+    }
+
+    return res.status(401).json({ mensagem: 'Usuário ou senha incorretos' });
+});
 
 app.get('/produtos', (req, res) => {
     res.json(produtos);

@@ -6,6 +6,35 @@ const inputCategoria = document.getElementById('categoria');
 const inputEstoque = document.getElementById('estoque');
 const tabela = document.querySelector('table');
 
+// Const login
+const formulario = document.getElementById('formularioLogin');
+
+if (formulario) {
+    formulario.addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+
+        const usuarioDigitado = document.getElementById('input-usuario').value;
+        const senhaDigitada = document.getElementById('input-senha').value;
+
+        const resposta = await fetch('/login', {
+            method: "POST",
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                usuario: usuarioDigitado,
+                senha: senhaDigitada
+            })
+        });
+
+        const dados = await resposta.json();
+
+        if(resposta.ok) {
+            window.location.href = '/index.html';
+        } else {
+            alert(dados.mensagem);
+        }
+    });
+}
+// Produtos
 function carregarProdutos() {
     fetch('/produtos')
         .then(res => res.json())
