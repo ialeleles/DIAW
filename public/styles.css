@@ -109,3 +109,42 @@ td button:last-child {
     padding: 10px;
 }
 
+body.pagina-login {
+    margin: 0px;
+    min-height: 100vh !important;
+    display: flex !important; 
+    justify-content: center;
+    align-items: center;
+    background-color: beige;
+}
+
+#formularioLogin {
+    background-color: white;
+    padding: 60px;
+    border-radius: 8px;
+    max-width: 320px;
+}
+
+#formularioLogin h1{
+    text-align: center;
+    margin-top: 0px;
+}
+
+#formularioLogin section {
+    margin-bottom: 16px;
+}
+
+#formularioLogin input {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid black;
+}
+
+#btn-enviar {
+    width: 100%;
+    padding: 8px;
+    font-weight: bold;
+    color: white;
+    background-color: darkolivegreen;
+}
