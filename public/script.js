@@ -6,6 +6,32 @@ const inputCategoria = document.getElementById('categoria');
 const inputEstoque = document.getElementById('estoque');
 const tabela = document.querySelector('table');
 
+document.getElementById('form-login').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const usuario = document.getElementById('usuario').value;
+    const senha = document.getElementById('senha').value;
+
+    const res = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario, senha })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+        alert('Login realizado com sucesso!');
+        carregarProdutos();
+    } else {
+        alert(data.Erro || 'Erro ao realizar login');
+    }
+});
+
+document.getElementById('btn-logout').addEventListener('click', async () => {
+    await fetch('/logout', { method: 'POST' });
+    alert('Desconectado!');
+    carregarProdutos();
+});
+
 function carregarProdutos() {
     fetch('/produtos')
         .then(res => res.json())
@@ -26,7 +52,7 @@ function carregarProdutos() {
                 tr.innerHTML = `
                     <td>${p.id}</td>
                     <td>${p.descricao}</td>
-                    <td>R$ ${p.preco}</td>
+                    <td>R$ ${p.preco.toFixed(2)}</td>
                     <td>${p.categoria}</td>
                     <td>${p.estoque}</td>
                     <td>
@@ -50,18 +76,18 @@ form.addEventListener('submit', async (e) => {
         estoque: Number(inputEstoque.value)
     };
 
-    if (id) {
-        await fetch(`/produtos/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(produto)
-        });
-    } else {
-        await fetch('/produtos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(produto)
-        });
+    const url = id ? `/produtos/${id}` : '/produtos';
+    const method = id ? 'PUT' : 'POST';
+
+    const res = await fetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(produto)
+    });
+
+    if (res.status === 401 || res.status === 403) {
+        alert('Você precisa estar logado para salvar ou alterar produtos!');
+        return;
     }
 
     form.reset();
@@ -70,7 +96,13 @@ form.addEventListener('submit', async (e) => {
 });
 
 async function excluirProduto(id) {
-    await fetch(`/produtos/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/produtos/${id}`, { method: 'DELETE' });
+
+    if (res.status === 401 || res.status === 403) {
+        alert('Você precisa estar logado para excluir produtos!');
+        return;
+    }
+
     carregarProdutos();
 }
 
