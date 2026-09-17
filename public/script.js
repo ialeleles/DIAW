@@ -1,144 +1,149 @@
-const express = require('express');
-const path = require('path');
-const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
+const formularioLogin = document.getElementById('formularioLogin');
 
-const app = express();
-const CHAVE_SECRETA = 'sua_chave_secreta_super_segura';
+if (formularioLogin) {
+    formularioLogin.addEventListener('submit', async (event) => {
+        event.preventDefault();
 
-app.use(express.json());
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+        const usuario = document.getElementById('input-usuario').value;
+        const senha = document.getElementById('input-senha').value;
 
-const produtos = [
-  { "id": 1, "descricao": "Arroz parboilizado 5Kg", "preco": 25.00, "categoria": "Alimentos", "estoque": 10 },
-  { "id": 2, "descricao": "Maionese 250gr", "preco": 7.20, "categoria": "Alimentos", "estoque": 5 },
-  { "id": 3, "descricao": "Iogurte Natural 200ml", "preco": 2.50, "categoria": "Laticínios", "estoque": 0 }
-];
+        const resposta = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario, senha })
+        });
 
-function autenticarToken(req, res, next) {
-  const token = req.cookies.token;
+        const dados = await resposta.json();
 
-  if (!token) {
-    return res.status(401).json({ Erro: 'Acesso negado. Faça login para continuar.' });
-  }
-
-  try {
-    const usuarioVerificado = jwt.verify(token, CHAVE_SECRETA);
-    req.usuario = usuarioVerificado;
-    next();
-  } catch (err) {
-    return res.status(403).json({ Erro: 'Token inválido ou expirado.' });
-  }
+        if (resposta.ok) {
+            window.location.href = '/index.html';
+        } else {
+            alert(dados.mensagem || dados.Erro || 'Usuário ou senha incorretos');
+        }
+    });
 }
 
-app.post('/login', (req, res) => {
-  const { usuario, senha } = req.body;
+const btnSair = document.getElementById('btn-sair');
 
-  if (usuario === 'admin' && senha === '123456') {
-    // Cria o payload do JWT
-    const token = jwt.sign({ usuario: 'admin', id: 1 }, CHAVE_SECRETA, {
-      expiresIn: '1h'
+if (btnSair) {
+    btnSair.addEventListener('click', async () => {
+        await fetch('/logout', { method: 'POST' });
+        window.location.href = '/login.html';
     });
+}
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: false,
-      maxAge: 3600000
-    });
+const formProduto = document.getElementById('form-produto');
 
-    return res.json({ mensagem: 'Login realizado com sucesso!' });
-  }
+if (formProduto) {
+    const tabela = formProduto.closest('body').querySelector('table');
+    const campoId = document.getElementById('produto-id');
+    const btnSalvar = document.getElementById('btn-salvar');
+    const tituloForm = document.getElementById('form-title');
 
-  return res.status(401).json({ Erro: 'Usuário ou senha incorretos.' });
-});
+    async function carregarProdutos() {
+        const resposta = await fetch('/produtos');
+        const produtos = await resposta.json();
 
-app.post('/logout', (req, res) => {
-  res.clearCookie('token');
-  res.json({ mensagem: 'Logout realizado com sucesso!' });
-});
+        tabela
+            .querySelectorAll('tr:not(#linha-cabecalho)')
+            .forEach((linha) => linha.remove());
 
-app.post('/login', (req, res) => {
-    const {usuario, senha} = req.body;
+        produtos.forEach((produto) => {
+            const linha = document.createElement('tr');
 
-    const usuarioEncontrado = usuariosCadastrados.find(u => u.usuario === usuario && String(u.senha) === String(senha));
+            linha.innerHTML = `
+                <td>${produto.id}</td>
+                <td>${produto.descricao}</td>
+                <td>R$ ${Number(produto.preco).toFixed(2)}</td>
+                <td>${produto.categoria}</td>
+                <td>${produto.estoque}</td>
+                <td>
+                    <button type="button" class="btn-editar" data-id="${produto.id}">Editar</button>
+                    <button type="button" class="btn-excluir" data-id="${produto.id}">Excluir</button>
+                </td>
+            `;
 
-    if(usuarioEncontrado) {
-        return res.status(200).json({ mensagem: 'Login realizado com sucesso!' });
+            tabela.appendChild(linha);
+        });
     }
 
-    return res.status(401).json({ mensagem: 'Usuário ou senha incorretos' });
-});
+    function limparFormulario() {
+        formProduto.reset();
+        campoId.value = '';
+        btnSalvar.textContent = 'Salvar';
+        tituloForm.textContent = 'Cadastrar Novo Produto';
+    }
 
-app.get('/produtos', (req, res) => {
-  res.json(produtos);
-});
+    async function tratarRespostaProtegida(resposta) {
+        if (resposta.status === 401 || resposta.status === 403) {
+            alert('Sua sessão expirou. Faça login novamente.');
+            window.location.href = '/login.html';
+            return false;
+        }
+        return true;
+    }
 
-app.get('/produtos/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  const produto = produtos.find(p => p.id === id);
+    formProduto.addEventListener('submit', async (event) => {
+        event.preventDefault();
 
-  if (produto) {
-    res.json(produto);
-  } else {
-    res.status(404).json({ Erro: 'Produto não encontrado' });
-  }
-});
+        const id = campoId.value;
+        const corpo = {
+            descricao: document.getElementById('descricao').value,
+            preco: document.getElementById('preco').value,
+            categoria: document.getElementById('categoria').value,
+            estoque: document.getElementById('estoque').value
+        };
 
-app.post('/produtos', autenticarToken, (req, res) => {
-  const { descricao, preco, categoria, estoque } = req.body;
+        const url = id ? `/produtos/${id}` : '/produtos';
+        const metodo = id ? 'PUT' : 'POST';
 
-  if (!descricao || preco === undefined || !categoria || estoque === undefined) {
-    return res.status(400).json({ Erro: 'Todos os campos são obrigatórios!' });
-  }
+        const resposta = await fetch(url, {
+            method: metodo,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(corpo)
+        });
 
-  const ultimoId = produtos.length > 0 ? produtos[produtos.length - 1].id : 0;
-  
-  const novoProduto = {
-    id: ultimoId + 1,
-    descricao,
-    preco: Number(preco),
-    categoria,
-    estoque: Number(estoque)
-  };
+        if (!(await tratarRespostaProtegida(resposta))) return;
 
-  produtos.push(novoProduto);
-  return res.status(201).json(novoProduto);
-});
+        if (!resposta.ok) {
+            const erro = await resposta.json();
+            alert(erro.Erro || 'Não foi possível salvar o produto');
+            return;
+        }
 
-app.put('/produtos/:id', autenticarToken, (req, res) => {
-  const id = parseInt(req.params.id);
-  const { descricao, preco, categoria, estoque } = req.body;
+        limparFormulario();
+        await carregarProdutos();
+    });
 
-  const index = produtos.findIndex(produto => produto.id === id);
+    tabela.addEventListener('click', async (event) => {
+        const id = event.target.dataset.id;
+        if (!id) return;
 
-  if (index !== -1) {
-    produtos[index] = {
-      id,
-      descricao: descricao || produtos[index].descricao,
-      preco: preco !== undefined ? Number(preco) : produtos[index].preco,
-      categoria: categoria || produtos[index].categoria,
-      estoque: estoque !== undefined ? Number(estoque) : produtos[index].estoque
-    };
+        if (event.target.classList.contains('btn-editar')) {
+            const resposta = await fetch(`/produtos/${id}`);
+            const produto = await resposta.json();
 
-    res.json(produtos[index]);
-  } else {
-    res.status(404).json({ Erro: 'Produto não encontrado' });
-  }
-});
+            campoId.value = produto.id;
+            document.getElementById('descricao').value = produto.descricao;
+            document.getElementById('preco').value = produto.preco;
+            document.getElementById('categoria').value = produto.categoria;
+            document.getElementById('estoque').value = produto.estoque;
 
-app.delete('/produtos/:id', autenticarToken, (req, res) => {
-  const id = parseInt(req.params.id);
-  const index = produtos.findIndex(produto => produto.id === id);
+            tituloForm.textContent = 'Editar Produto';
+            btnSalvar.textContent = 'Atualizar';
+        }
 
-  if (index !== -1) {
-    produtos.splice(index, 1);
-    res.json(produtos);
-  } else {
-    res.status(404).json({ Erro: 'Id não encontrado' });
-  }
-});
+        if (event.target.classList.contains('btn-excluir')) {
+            const confirmar = confirm('Deseja realmente excluir este produto?');
+            if (!confirmar) return;
 
-app.listen(3000, () => {
-  console.log('Servidor rodando em http://localhost:3000');
-});
+            const resposta = await fetch(`/produtos/${id}`, { method: 'DELETE' });
+
+            if (!(await tratarRespostaProtegida(resposta))) return;
+
+            await carregarProdutos();
+        }
+    });
+
+    carregarProdutos();
+}
